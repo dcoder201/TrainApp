@@ -59,5 +59,41 @@ def status():
     return jsonify(display_ls)
 
 
+@app.route('/bookticket',methods=['GET','POST'])
+def book():
+    userTrain = request.args.get('trainID')
+    seatCount = int(request.args.get('seat_count'))
+    seatCheckQuery = 'select seats_remaining from trains where train_id = %s'
+    cursor.execute(seatCheckQuery,(userTrain,))
+    seatRec = cursor.fetchall()
+    if (seatCount < seatRec[0][0] and seatCount > 0):
+        updated = seatRec[0][0] - seatCount
+        bookQuery = 'update trains set seats_remaining = %s where train_id = %s'
+        val=(updated,userTrain)
+        cursor.execute(bookQuery,val)
+        db.commit()
+        return (f"<div style='color:green;text-align:center;font-size: 20px;padding: 40vh 0 0 0'><b>{seatCount} tickets have booked successfully</b></div>")
+    else:
+        return("<div style='color:green;text-align:center;font-size: 20px;padding: 40vh 0 0 0'><b>You are in waiting list</b></div>")
+
+@app.route('/cancel',methods=['GET','POST'])
+def cancel():
+    userTrain = request.args.get('trainID')
+    seatCount = int(request.args.get('seat_count'))
+    seatCheckQuery = 'select seats_remaining from trains where train_id = %s'
+    cursor.execute(seatCheckQuery,(userTrain,))
+    seatRec = cursor.fetchall()
+    if (seatCount < seatRec[0][0] and seatCount>0):
+        updated = seatRec[0][0] + seatCount
+        bookQuery = 'update trains set seats_remaining = %s where train_id = %s'
+        val=(updated,userTrain)
+        cursor.execute(bookQuery,val)
+        db.commit()
+        return (f"<div style='color:green;text-align:center;font-size: 20px;padding: 40vh 0 0 0'><b>{seatCount} tickets have cancelled successfully</b></div>")
+    else:
+        return ("<div style='color:green;text-align:center;font-size: 20px;padding: 40vh 0 0 0'><b>Check your count again!</b></div>")
+
+
+
 if __name__ =='__main__':
     app.run(debug=True)
